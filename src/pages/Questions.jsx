@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { Typography, Button, CircularProgress } from '@mui/material'
 import { Box } from '@mui/system'
+import { decode } from 'html-entities'
 import useAxios from '../hooks/useAxios'
+import { handleScoreChange } from '../redux/actions'
 
 const getRandomInt = (max) => Math.floor(Math.random() * Math.floor(max))
 
@@ -11,6 +13,7 @@ const Questions = () => {
   const [questionIndex, setQuestionIndex] = useState(0)
   const [options, setOptions] = useState([])
 
+  const dispatch = useDispatch()
   const {
     question_category,
     question_difficulty,
@@ -48,7 +51,13 @@ const Questions = () => {
     }
   }, [response, questionIndex])
 
-  const handleClickAnswer = () => {
+  const handleClickAnswer = (e) => {
+    const question = response.results[questionIndex]
+
+    if (e.target.textContent === question.correct_answer) {
+      dispatch(handleScoreChange(score + 1))
+    }
+
     if (questionIndex + 1 < response.results.length) {
       setQuestionIndex(questionIndex + 1)
     } else {
@@ -67,10 +76,10 @@ const Questions = () => {
   return (
     <Box>
       <Typography variant="h4">Questions {questionIndex + 1}</Typography>
-      <Typography mt={5}>{response.results[questionIndex].question}</Typography>
+      <Typography mt={5}>{decode(response.results[questionIndex].question)}</Typography>
       {options.map((data, id) => (
         <Box mt={2}  key={id}>
-          <Button onClick={handleClickAnswer} variant="contained">{data}</Button>
+          <Button onClick={handleClickAnswer} variant="contained">{decode(data)}</Button>
         </Box>
       ))}
       <Box mt={5}>
